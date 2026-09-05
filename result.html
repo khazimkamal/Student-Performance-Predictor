@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction Result — {{ r.student_name }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="result-container">
+  <div class="result-header">
+    <div class="student-meta">
+      <span class="meta-tag">Prediction Result</span>
+      <h1 class="student-name">{{ r.student_name }}</h1>
+      <p class="model-badge">Evaluated using <strong>{{ r.model_used }}</strong> (Pass mark: {{ r.pass_mark | num }}/100)</p>
+    </div>
+    <div class="result-actions">
+      <a href="{{ url_for('index') }}" class="btn btn-outline">&larr; New Prediction</a>
+      <a href="{{ url_for('history') }}" class="btn btn-secondary">View History</a>
+    </div>
+  </div>
+
+  <div class="result-summary-grid">
+    <div class="card stat-card highlight-card">
+      <span class="stat-label">Predicted Final Score</span>
+      <div class="stat-main">
+        <span class="stat-number">{{ r.predicted_score }}</span>
+        <span class="stat-unit">/ 100</span>
+      </div>
+      <div class="score-bar-bg">
+        <div class="score-bar-fill {% if r.predicted_score >= 50 %}pass{% else %}fail{% endif %}" style="width: {{ r.predicted_score }}%;"></div>
+      </div>
+    </div>
+
+    <div class="card stat-card">
+      <span class="stat-label">Assigned Grade</span>
+      <div class="grade-display grade-{{ r.grade | lower }}">
+        {{ r.grade }}
+      </div>
+      <span class="stat-subtext">Letter grade scale</span>
+    </div>
+
+    <div class="card stat-card">
+      <span class="stat-label">Risk Category</span>
+      <div class="risk-badge-large risk-{{ r.risk_level | lower }}">
+        {{ r.risk_level }} Risk
+      </div>
+      <span class="stat-subtext">Probability of failing: <strong>{{ r.fail_probability }}%</strong></span>
+    </div>
+  </div>
+
+  <div class="result-body-grid">
+    <div class="card inputs-card">
+      <h3>Submitted Record</h3>
+      <table class="data-table">
+        <tbody>
+          <tr>
+            <th>Weekly study time</th>
+            <td>Level {{ r.study_time | num }}</td>
+          </tr>
+          <tr>
+            <th>Classes missed</th>
+            <td>{{ r.absences | num }} classes</td>
+          </tr>
+          <tr>
+            <th>Past class failures</th>
+            <td>{{ r.failures | num }}</td>
+          </tr>
+          <tr>
+            <th>First-period grade</th>
+            <td>>{{ r.previous_g1 | num }}< / 100</td>
+          </tr>
+          <tr>
+            <th>Second-period grade</th>
+            <td>>{{ r.previous_g2 | num }}< / 100</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card tips-card">
+      <h3>Actionable Recommendations</h3>
+      <ul class="tips-list">
+        {% for tip in r.tips %}
+          <li class="tip-item">{{ tip }}</li>
+        {% endfor %}
+      </ul>
+
+      {% if r.what_if %}
+        <hr class="divider">
+        <div class="what-if-section">
+          <h3>Biggest Wins Available</h3>
+          <p class="section-desc">Model simulation showing the impact of actionable improvements:</p>
+          <div class="what-if-grid">
+            {% for item in r.what_if %}
+              <div class="what-if-item">
+                <div class="what-if-gain">+{{ item.gain }} pts</div>
+                <div class="what-if-label">{{ item.label }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

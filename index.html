@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Predict Student Performance — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Predict performance</h1>
+  <p class="subtitle">Enter 5 student indicators to predict final score (0–100), letter grade, and fail risk using machine learning.</p>
+</div>
+
+<div class="split-layout">
+  <div class="card form-card">
+    <form action="{{ url_for('predict') }}" method="POST" id="prediction-form" novalidate>
+      <div class="form-group">
+        <label for="student_name">Student Name <span class="hint">(optional)</span></label>
+        <input
+          type="text"
+          id="student_name"
+          name="student_name"
+          class="form-control"
+          placeholder="e.g. Alex Smith"
+          maxlength="60"
+          value="{{ form.get('student_name', '') }}"
+        >
+      </div>
+
+      <hr class="divider">
+
+      {% for field, (lo, hi, label, step) in spec.items() %}
+        {% set field_val = form.get(field, (lo + (hi - lo) / 2) | int if field != 'study_time' and field != 'failures' and field != 'absences' else (2 if field == 'study_time' else 0)) %}
+        {% set err = errors.get(field) %}
+        <div class="form-group {% if err %}has-error{% endif %}">
+          <div class="field-header">
+            <label for="{{ field }}_input">{{ label }}</label>
+            <div class="range-hint">Range: {{ lo }} – {{ hi }}</div>
+          </div>
+
+          <div class="input-slider-row">
+            <input
+              type="range"
+              id="{{ field }}_range"
+              class="slider"
+              min="{{ lo }}"
+              max="{{ hi }}"
+              step="{{ step }}"
+              value="{{ field_val }}"
+              data-target="{{ field }}_input"
+            >
+            <input
+              type="number"
+              id="{{ field }}_input"
+              name="{{ field }}"
+              class="form-control number-box {% if err %}is-invalid{% endif %}"
+              min="{{ lo }}"
+              max="{{ hi }}"
+              step="any"
+              value="{{ field_val }}"
+              data-target="{{ field }}_range"
+              required
+            >
+          </div>
+
+          {% if field == 'study_time' %}
+            <div class="field-scale-legend">
+              <span>1: &lt;2 hrs</span>
+              <span>2: 2–5 hrs</span>
+              <span>3: 5–10 hrs</span>
+              <span>4: &gt;10 hrs</span>
+            </div>
+          {% endif %}
+
+          {% if err %}
+            <div class="error-message">{{ err }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-block">
+          Predict performance
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card live-preview-card">
+    <div class="preview-header">
+      <h3>Live Model Preview</h3>
+      <span class="badge badge-pill badge-live" id="live-status">Interactive</span>
+    </div>
+    <p class="preview-description">As you adjust the inputs on the left, the ML model predicts in real time:</p>
+
+    <div class="gauge-container">
+      <div class="gauge-dial" id="gauge-dial">
+        <div class="gauge-fill" id="gauge-fill"></div>
+        <div class="gauge-inner">
+          <div class="gauge-score" id="preview-score">--</div>
+          <div class="gauge-label">Score / 100</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-details">
+      <div class="preview-row">
+        <span>Predicted Grade:</span>
+        <strong id="preview-grade" class="grade-badge">--</strong>
+      </div>
+      <div class="preview-row">
+        <span>Fail Probability:</span>
+        <strong id="preview-fail-prob">--%</strong>
+      </div>
+      <div class="preview-row">
+        <span>Risk Assessment:</span>
+        <strong id="preview-risk" class="risk-badge">--</strong>
+      </div>
+      <div class="preview-row">
+        <span>Model:</span>
+        <span id="preview-model" class="text-muted">Random Forest</span>
+      </div>
+    </div>
+
+    <div class="preview-tips" id="preview-tips-box" style="display: none;">
+      <h4>Key Recommendation</h4>
+      <p id="preview-top-tip" class="tip-text"></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

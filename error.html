@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Error — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="error-container">
+  <div class="card error-card">
+    <div class="error-icon">⚠️</div>
+    <h2>Something went wrong</h2>
+    <p class="error-message-text">{{ message }}</p>
+    <div class="error-actions">
+      <a href="{{ url_for('index') }}" class="btn btn-primary">Return to Predictor</a>
+      <a href="{{ url_for('about') }}" class="btn btn-outline">Check Model Status</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

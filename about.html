@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Model & Data — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Machine Learning Model &amp; Data</h1>
+  <p class="subtitle">Trained on real secondary student records using scikit-learn regressors and classifiers.</p>
+</div>
+
+<div class="about-grid">
+  <div class="card">
+    <h3>Regressor Performance Comparison</h3>
+    <p class="card-desc">Two models were evaluated on the exact same 80/20 train/test split. The model with the higher test R&sup2; is chosen for production predictions (Selected: <strong>{{ m.best_regressor }}</strong>).</p>
+
+    <div class="table-responsive">
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Test R&sup2; Score</th>
+            <th>RMSE (Score Error)</th>
+            <th>MAE (Avg Points Off)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Random Forest</strong></td>
+            <td><strong>{{ m.regressors["Random Forest"].r2 }}</strong></td>
+            <td>{{ m.regressors["Random Forest"].rmse }}</td>
+            <td>{{ m.regressors["Random Forest"].mae }}</td>
+            <td><span class="badge badge-success">Selected Best</span></td>
+          </tr>
+          <tr>
+            <td><strong>Linear Regression</strong></td>
+            <td><strong>{{ m.regressors["Linear Regression"].r2 }}</strong></td>
+            <td>{{ m.regressors["Linear Regression"].rmse }}</td>
+            <td>{{ m.regressors["Linear Regression"].mae }}</td>
+            <td><span class="badge badge-secondary">Baseline</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-info mt-3">
+      <strong>Why Random Forest wins:</strong> Real student data contains edge cases, such as students with 0 final score. Linear Regression cannot model sharp zero-drops without predicting negative or uncalibrated scores, whereas Random Forest handles non-linear boundaries smoothly.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Risk of Failing Classifier</h3>
+    <p class="card-desc">Predicts whether a student is in danger of scoring below the {{ m.pass_mark | int }}/100 pass mark.</p>
+    
+    <div class="metrics-row">
+      <div class="metric-box">
+        <span class="metric-num">{{ (m.classifier.accuracy * 100) | round(1) }}%</span>
+        <span class="metric-title">Test Accuracy</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-num">{{ m.classifier.roc_auc }}</span>
+        <span class="metric-title">ROC AUC Score</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-num">{{ (m.classifier.fail_rate_in_data * 100) | round(1) }}%</span>
+        <span class="metric-title">Failure Rate in Data</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Feature Importance (Risk Drivers)</h3>
+    <p class="card-desc">Relative influence of each student feature on the risk of failing:</p>
+
+    <div class="feature-importance-list">
+      {% for feat, imp in m.feature_importance.items() %}
+        {% set label = labels[feat][2] if feat in labels else feat %}
+        {% set pct = (imp * 100) | round(1) %}
+        <div class="fi-row">
+          <div class="fi-label-box">
+            <span class="fi-name">{{ label }}</span>
+            <span class="fi-pct">{{ pct }}%</span>
+          </div>
+          <div class="fi-bar-bg">
+            <div class="fi-bar-fill" style="width: {{ pct }}%;"></div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Dataset Reference</h3>
+    <div class="dataset-meta-list">
+      <div class="meta-item">
+        <strong>Source Dataset:</strong>
+        <span>{{ m.dataset.name }} ({{ m.dataset.course }})</span>
+      </div>
+      <div class="meta-item">
+        <strong>Sample Count:</strong>
+        <span>{{ m.n_samples }} verified student records</span>
+      </div>
+      <div class="meta-item">
+        <strong>Citation:</strong>
+        <p class="citation-text">Cortez, P. and Silva, A. (2008). <em>Using Data Mining to Predict Secondary School Student Performance.</em> Proceedings of 5th FUture BUsiness TEChnology Conference, pp. 5–12.</p>
+      </div>
+      <div class="meta-item">
+        <strong>Repository URL:</strong>
+        <a href="{{ m.dataset.url }}" target="_blank" rel="noopener noreferrer" class="link-external">{{ m.dataset.url }} &nearr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

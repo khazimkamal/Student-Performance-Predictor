@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header history-header-row">
+  <div>
+    <h1>Prediction History</h1>
+    <p class="subtitle">Stored student performance assessments with aggregate analytics.</p>
+  </div>
+  {% if rows %}
+    <div>
+      <form action="{{ url_for('clear') }}" method="POST" onsubmit="return confirm('Clear all prediction history?');">
+        <button type="submit" class="btn btn-danger-outline">Clear All History</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+
+<div class="stats-banner-grid">
+  <div class="card stat-mini-card">
+    <span class="mini-label">Total Predictions</span>
+    <span class="mini-value">{{ stats.total }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">Avg Predicted Score</span>
+    <span class="mini-value">{{ stats.avg_score }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">High Risk</span>
+    <span class="mini-value risk-text-high">{{ stats.high_risk }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">Medium Risk</span>
+    <span class="mini-value risk-text-medium">{{ stats.medium_risk }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">Low Risk</span>
+    <span class="mini-value risk-text-low">{{ stats.low_risk }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">Avg Study Level</span>
+    <span class="mini-value">{{ stats.avg_study }}</span>
+  </div>
+  <div class="card stat-mini-card">
+    <span class="mini-label">Avg Absences</span>
+    <span class="mini-value">{{ stats.avg_absences }}</span>
+  </div>
+</div>
+
+<div class="card table-card">
+  {% if not rows %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>No predictions yet</h3>
+      <p>Fill out the prediction form to calculate student scores and save history records.</p>
+      <a href="{{ url_for('index') }}" class="btn btn-primary">Start New Prediction</a>
+    </div>
+  {% else %}
+    <div class="table-responsive">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Score</th>
+            <th>Grade</th>
+            <th>Risk</th>
+            <th>Fail %</th>
+            <th>Study Time</th>
+            <th>Absences</th>
+            <th>Failures</th>
+            <th>G1</th>
+            <th>G2</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td><strong>{{ row.student_name }}</strong></td>
+              <td><span class="score-pill">{{ row.predicted_score }}</span></td>
+              <td><span class="grade-pill grade-{{ row.grade | lower }}">{{ row.grade }}</span></td>
+              <td><span class="badge badge-risk risk-{{ row.risk_level | lower }}">{{ row.risk_level }}</span></td>
+              <td>{{ row.fail_probability }}%</td>
+              <td>Level {{ row.study_time | num }}</td>
+              <td>{{ row.absences | num }}</td>
+              <td>{{ row.failures | num }}</td>
+              <td>{{ row.previous_g1 | num }}</td>
+              <td>{{ row.previous_g2 | num }}</td>
+              <td class="text-muted">{{ row.created_at }}</td>
+              <td>
+                <form action="{{ url_for('delete', pred_id=row.id) }}" method="POST" class="inline-form">
+                  <button type="submit" class="btn btn-icon-delete" title="Delete record" aria-label="Delete record">🗑️</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

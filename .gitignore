@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+data/students.db
+data/student_data.csv
+model/model.pkl
+model/metrics.json
